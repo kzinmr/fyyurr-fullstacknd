@@ -180,7 +180,7 @@ def create_venue_submission():
     # TODO: modify data to be the data object returned from db insertion
     error = False
     try:
-        formdata = {k: v[0] if len(v) == 1 else v for k, v in request.form.lists()}
+        formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
         venue = Venue(**formdata)
         db.session.add(venue)
         db.session.commit()
@@ -331,15 +331,7 @@ def show_artist(artist_id):
 @app.route("/artists/<int:artist_id>/edit", methods=["GET"])
 def edit_artist(artist_id):
     form = ArtistForm()
-    artist = {
-        "id": 4,
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": (
-            "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid="
-            "eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-        ),
-    }
+    artist = Artist.query.get(artist_id)
     # TODO: populate form with fields from artist with ID <artist_id>
     return render_template("forms/edit_artist.html", form=form, artist=artist)
 
@@ -348,30 +340,37 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     # TODO: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
-
+    artist = Artist.query.get(artist_id)
+    error = False
+    try:
+        formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
+        for k, v in formdata.items():
+            setattr(artist, k, v)
+        db.session.add(artist)
+        db.session.commit()
+    except Exception:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        # on successful db insert, flash success
+        flash("Artist " + request.form["name"] + " was successfully updated!")
+    else:
+        flash(
+            "An error occurred. Artist "
+            + request.form["name"]
+            + " could not be updated."
+        )
+        # abort(400)
     return redirect(url_for("show_artist", artist_id=artist_id))
 
 
 @app.route("/venues/<int:venue_id>/edit", methods=["GET"])
 def edit_venue(venue_id):
     form = VenueForm()
-    venue = {
-        "id": 1,
-        "name": "The Musical Hop",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
-        "facebook_link": "https://www.facebook.com/TheMusicalHop",
-        "seeking_talent": True,
-        "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-        "image_link": (
-            "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid="
-            "eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-        ),
-    }
+    venue = Venue.query.get(venue_id)
     # TODO: populate form with values from venue with ID <venue_id>
     return render_template("forms/edit_venue.html", form=form, venue=venue)
 
@@ -380,6 +379,30 @@ def edit_venue(venue_id):
 def edit_venue_submission(venue_id):
     # TODO: take values from the form submitted, and update existing
     # venue record with ID <venue_id> using the new attributes
+    venue = Venue.query.get(venue_id)
+    error = False
+    try:
+        formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
+        for k, v in formdata.items():
+            setattr(venue, k, v)
+        db.session.add(venue)
+        db.session.commit()
+    except Exception:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        # on successful db insert, flash success
+        flash("Venue " + request.form["name"] + " was successfully updated!")
+    else:
+        flash(
+            "An error occurred. Venue "
+            + request.form["name"]
+            + " could not be updated."
+        )
+        # abort(400)
     return redirect(url_for("show_venue", venue_id=venue_id))
 
 
@@ -400,7 +423,7 @@ def create_artist_submission():
     # TODO: modify data to be the data object returned from db insertion
     error = False
     try:
-        formdata = {k: v[0] if len(v) == 1 else v for k, v in request.form.lists()}
+        formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
         artist = Artist(**formdata)
         db.session.add(artist)
         db.session.commit()

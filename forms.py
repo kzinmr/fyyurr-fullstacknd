@@ -195,7 +195,7 @@ class ArtistForm(FlaskForm):
     state = SelectField(
         "state",
         validators=[DataRequired(), AnyOf(state_choices)],
-        choices=state_choices,
+        choices=[(c, c) for c in state_choices],
     )
     phone = StringField(
         # TODO(?) implement validation logic for state

@@ -458,63 +458,28 @@ def shows():
     # displays list of shows at /shows
     # TODO: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
-    data = [
-        {
-            "venue_id": 1,
-            "venue_name": "The Musical Hop",
-            "artist_id": 4,
-            "artist_name": "Guns N Petals",
-            "artist_image_link": (
-                "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib="
-                "rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-            ),
-            "start_time": "2019-05-21T21:30:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 5,
-            "artist_name": "Matt Quevedo",
-            "artist_image_link": (
-                "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib="
-                "rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80"
-            ),
-            "start_time": "2019-06-15T23:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": (
-                "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid="
-                "eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80"
-            ),
-            "start_time": "2035-04-01T20:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": (
-                "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid="
-                "eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80"
-            ),
-            "start_time": "2035-04-08T20:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": (
-                "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid="
-                "eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80"
-            ),
-            "start_time": "2035-04-15T20:00:00.000Z",
-        },
-    ]
+    show_venue = (
+        db.session.query(Show, Venue).join(Venue, Venue.id == Show.venue_id).all()
+    )
+    showid2entry = {show.id: (show.start_time, venue) for show, venue in show_venue}
+    show_artist = (
+        db.session.query(Show, Artist).join(Artist, Artist.id == Show.artist_id).all()
+    )
+
+    data = []
+    for show, artist in show_artist:
+        start_time, venue = showid2entry[show.id]
+        data.append(
+            {
+                "venue_id": venue.id,
+                "venue_name": venue.name,
+                "artist_id": artist.id,
+                "artist_name": artist.name,
+                "artist_image_link": artist.image_link,
+                "start_time": start_time.isoformat(),
+            }
+        )
+
     return render_template("pages/shows.html", shows=data)
 
 
@@ -530,11 +495,28 @@ def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
 
-    # on successful db insert, flash success
-    flash("Show was successfully listed!")
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    error = False
+    try:
+        formdata = request.form.to_dict()
+        show = Show(**formdata)
+        db.session.add(show)
+        db.session.commit()
+    except Exception:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        # on successful db insert, flash success
+        flash("Show was successfully listed!")
+    else:
+        # TODO: on unsuccessful db insert, flash an error instead.
+        # e.g., flash('An error occurred. Show could not be listed.')
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        flash("An error occurred. Show could not be listed.")
+        # abort(400)
+
     return render_template("pages/home.html")
 
 

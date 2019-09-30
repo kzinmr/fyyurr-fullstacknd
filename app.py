@@ -249,10 +249,6 @@ def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    response = {
-        "count": 1,
-        "data": [{"id": 4, "name": "Guns N Petals", "num_upcoming_shows": 0}],
-    }
     nowtime = datetime.datetime.utcnow()
     id2num = defaultdict(int)
     upcoming_shows = dict(

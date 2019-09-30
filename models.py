@@ -19,9 +19,9 @@ class Venue(db.Model):
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
     address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=True)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
-    image_link = db.Column(db.String(500), nullable=False)
+    image_link = db.Column(db.String(500), nullable=True)
     facebook_link = db.Column(db.String(120), nullable=True)
 
     website = db.Column(db.String(120), nullable=True)
@@ -41,9 +41,9 @@ class Artist(db.Model):
     name = db.Column(db.String, nullable=False)
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=True)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
-    image_link = db.Column(db.String(500), nullable=False)
+    image_link = db.Column(db.String(500), nullable=True)
     facebook_link = db.Column(db.String(120), nullable=True)
 
     website = db.Column(db.String(120), nullable=True)

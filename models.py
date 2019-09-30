@@ -8,6 +8,7 @@ db = SQLAlchemy()
 def init_db(app):
     db.init_app(app)
     Migrate(app, db)
+    return db
 
 
 class Venue(db.Model):
@@ -21,7 +22,7 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
-    facebook_link = db.Column(db.String(120), nullable=False)
+    facebook_link = db.Column(db.String(120), nullable=True)
 
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, nullable=True)
@@ -30,7 +31,6 @@ class Venue(db.Model):
     shows = db.relationship(
         "Show", backref="venue", cascade="all, delete-orphan", lazy=True
     )
-
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 
@@ -43,7 +43,7 @@ class Artist(db.Model):
     state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
-    image_link = db.Column(db.String(500), nullable=True)
+    image_link = db.Column(db.String(500), nullable=False)
     facebook_link = db.Column(db.String(120), nullable=True)
 
     website = db.Column(db.String(120), nullable=True)
@@ -53,7 +53,6 @@ class Artist(db.Model):
     shows = db.relationship(
         "Show", backref="artist", cascade="all, delete-orphan", lazy=True
     )
-
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 

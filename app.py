@@ -10,11 +10,11 @@ from flask_moment import Moment
 import logging
 from logging import Formatter, FileHandler
 
-# from flask_wtf import Form
 from forms import ShowForm, VenueForm, ArtistForm
 from models import init_db, Venue, Artist, Show
 import datetime
 from collections import defaultdict
+import sys
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -178,12 +178,30 @@ def create_venue_form():
 def create_venue_submission():
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
+    error = False
+    try:
+        formdata = {k: v[0] if len(v) == 1 else v for k, v in request.form.lists()}
+        venue = Venue(**formdata)
+        db.session.add(venue)
+        db.session.commit()
+    except Exception:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        # on successful db insert, flash success
+        flash("Venue " + request.form["name"] + " was successfully listed!")
+    else:
+        # TODO: on unsuccessful db insert, flash an error instead.
+        # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        flash(
+            "An error occurred. Venue " + request.form["name"] + " could not be listed."
+        )
+        # abort(400)
 
-    # on successful db insert, flash success
-    flash("Venue " + request.form["name"] + " was successfully listed!")
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template("pages/home.html")
 
 
@@ -191,10 +209,30 @@ def create_venue_submission():
 def delete_venue(venue_id):
     # TODO: Complete this endpoint for taking a venue_id, and using
     # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+    error = False
+    try:
+        venue = Venue.query.get(venue_id)
+        db.session.delete(venue)
+        db.session.commit()
+    except Exception:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+    if not error:
+        # on successful db insert, flash success
+        flash("Venue " + venue.name + " has successfully been deleted!")
+    else:
+        # TODO: on unsuccessful db insert, flash an error instead.
+        # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        flash("An error occurred. Venue could not be deleted.")
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+
+    # FIXME: No redirect occurs
+    return render_template("pages/home.html")
 
 
 #  Artists

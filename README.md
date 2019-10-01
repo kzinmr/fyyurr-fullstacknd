@@ -109,25 +109,25 @@ Best of luck in your final project! Fyyur depends on you!
 
 ### Development Setup
 
-First, [install Flask](http://flask.pocoo.org/docs/1.0/installation/#install-flask) if you haven't already.
+First, [install Pipenv](https://pipenv-fork.readthedocs.io/en/latest/) if you haven't already.
+And perform pipenv install.
 
   ```
-  $ cd ~
-  $ sudo pip3 install Flask
+  $ pip install pipenv
+  $ cd YOUR_PROJECT_DIRECTORY_PATH/
   ```
 
 To start and run the local development server,
 
-1. Initialize and activate a virtualenv:
+1. Initialize and activate a venv through pipenv:
   ```
   $ cd YOUR_PROJECT_DIRECTORY_PATH/
-  $ virtualenv --no-site-packages env
-  $ source env/bin/activate
+  $ pipenv shell
   ```
 
-2. Install the dependencies:
+2. Install the dependencies based on the Pipfile:
   ```
-  $ pip install -r requirements.txt
+  $ pipenv install
   ```
 
 3. Run the development server:

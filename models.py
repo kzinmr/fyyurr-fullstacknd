@@ -19,10 +19,12 @@ class Venue(db.Model):
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
     address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=True)
+    # address may not be unique when the building name is not provided
+    # while the other venue resides in the same building, for example.
+    phone = db.Column(db.String(120), nullable=True, unique=True)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
     image_link = db.Column(db.String(500), nullable=True)
-    facebook_link = db.Column(db.String(120), nullable=True)
+    facebook_link = db.Column(db.String(120), nullable=True, unique=True)
 
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, nullable=True)
@@ -41,10 +43,10 @@ class Artist(db.Model):
     name = db.Column(db.String, nullable=False)
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(120), nullable=True, unique=True)
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
     image_link = db.Column(db.String(500), nullable=True)
-    facebook_link = db.Column(db.String(120), nullable=True)
+    facebook_link = db.Column(db.String(120), nullable=True, unique=True)
 
     website = db.Column(db.String(120), nullable=True)
     seeking_venue = db.Column(db.Boolean, nullable=True)

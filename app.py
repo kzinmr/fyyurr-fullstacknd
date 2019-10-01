@@ -177,7 +177,7 @@ def create_venue_form():
 @app.route("/venues/create", methods=["POST"])
 def create_venue_submission():
     # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    # TODO(?): modify data to be the data object returned from db insertion
     error = False
     try:
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
@@ -330,8 +330,10 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route("/artists/<int:artist_id>/edit", methods=["GET"])
 def edit_artist(artist_id):
-    form = ArtistForm()
     artist = Artist.query.get(artist_id)
+    form = ArtistForm(obj=artist)
+    if form.validate():
+        form.populate_obj(artist)
     # TODO: populate form with fields from artist with ID <artist_id>
     return render_template("forms/edit_artist.html", form=form, artist=artist)
 
@@ -369,9 +371,12 @@ def edit_artist_submission(artist_id):
 
 @app.route("/venues/<int:venue_id>/edit", methods=["GET"])
 def edit_venue(venue_id):
-    form = VenueForm()
     venue = Venue.query.get(venue_id)
+    form = VenueForm(obj=venue)
+    if form.validate():
+        form.populate_obj(venue)
     # TODO: populate form with values from venue with ID <venue_id>
+
     return render_template("forms/edit_venue.html", form=form, venue=venue)
 
 
@@ -420,7 +425,7 @@ def create_artist_form():
 def create_artist_submission():
     # called upon submitting the new artist listing form
     # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    # TODO(?): modify data to be the data object returned from db insertion
     error = False
     try:
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}

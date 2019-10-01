@@ -56,25 +56,37 @@ def index():
 #  ----------------------------------------------------------------
 
 
-@app.route("/venues")
-def venues():
-    # TODO: replace with real venues data.
-    #       num_shows should be aggregated based on number of upcoming shows per venue.
+def count_id2num_upcoming_shows_for_venue():
     nowtime = datetime.datetime.utcnow()
-    id2num = defaultdict(int)
-    upcoming_shows = dict(
+    # Use defaultdict in order to return 0 for all the venue id by default.
+    id2num_upcoming_shows = defaultdict(int)
+    # Count and save # of upcoming shows only for venue entries to which the coressponding show exists.
+    id2upcoming_shows_dict = dict(
         db.session.query(Venue.id, db.func.count(Show.id))
         .join(Show, Show.venue_id == Venue.id)
         .filter(Show.start_time > nowtime)
         .group_by(Venue.id)
         .all()
     )
-    id2num.update(upcoming_shows)
+    id2num_upcoming_shows.update(id2upcoming_shows_dict)
+    return id2num_upcoming_shows
 
+
+@app.route("/venues")
+def venues():
+    # TODO: replace with real venues data.
+    #       num_shows should be aggregated based on number of upcoming shows per venue.
+    id2num_upcoming_shows = count_id2num_upcoming_shows_for_venue()
+
+    # format data for rendering template
     dd = defaultdict(list)
     for u in db.session.query(Venue.id, Venue.name, Venue.city, Venue.state).all():
         dd[(u.city, u.state)].append(
-            {"id": u.id, "name": u.name, "num_upcoming_shows": id2num[u.id]}
+            {
+                "id": u.id,
+                "name": u.name,
+                "num_upcoming_shows": id2num_upcoming_shows[u.id],
+            }
         )
     data = [
         {"city": city, "state": state, "venues": venues}
@@ -89,17 +101,9 @@ def search_venues():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-    nowtime = datetime.datetime.utcnow()
-    id2num = defaultdict(int)
-    upcoming_shows = dict(
-        db.session.query(Venue.id, db.func.count(Show.id))
-        .join(Show, Show.venue_id == Venue.id)
-        .filter(Show.start_time > nowtime)
-        .group_by(Venue.id)
-        .all()
-    )
-    id2num.update(upcoming_shows)
+    id2num_upcoming_shows = count_id2num_upcoming_shows_for_venue()
 
+    # Use .ilike for case-insensitive substring search.
     search_term = request.form.get("search_term", "")
     data = (
         db.session.query(Venue.id, Venue.name)
@@ -109,7 +113,11 @@ def search_venues():
     response = {
         "count": len(data),
         "data": [
-            {"id": r.id, "name": r.name, "num_upcoming_shows": id2num[r.id]}
+            {
+                "id": r.id,
+                "name": r.name,
+                "num_upcoming_shows": id2num_upcoming_shows[r.id],
+            }
             for r in data
         ],
     }
@@ -122,7 +130,10 @@ def search_venues():
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
-    nowtime = datetime.datetime.utcnow()
+
+    # Perform two distinct join query instead of doing like the following for performance issue:
+    #   session.query(Show, Artist, Venue).join(Artist, ...).join(Venue, ...)
+    # I'm afraid that this creates an initial large table whose size is (n_shows * n_artist * n_venue)-order.
     show_artist = (
         db.session.query(Show, Artist).join(Artist, Artist.id == Show.artist_id).all()
     )
@@ -130,6 +141,8 @@ def show_venue(venue_id):
     venue_show = (
         db.session.query(Venue, Show).outerjoin(Show, Show.venue_id == Venue.id).all()
     )
+
+    nowtime = datetime.datetime.utcnow()
     data_dict = defaultdict(list)
     for venue, show in venue_show:
         if venue.id not in data_dict:
@@ -180,6 +193,7 @@ def create_venue_submission():
     # TODO(?): modify data to be the data object returned from db insertion
     error = False
     try:
+        # Use form.lists() not .as_dict() because 'genres' is multi-valued field.
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
         venue = Venue(**formdata)
         db.session.add(venue)
@@ -231,7 +245,7 @@ def delete_venue(venue_id):
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
 
-    # FIXME: No redirect occurs
+    # FIXME: No redirection occurs
     return render_template("pages/home.html")
 
 
@@ -244,21 +258,28 @@ def artists():
     return render_template("pages/artists.html", artists=data)
 
 
+def count_id2num_upcoming_shows_for_artist():
+    nowtime = datetime.datetime.utcnow()
+    # Use defaultdict in order to return 0 for all the artist id by default.
+    id2num_upcoming_shows = defaultdict(int)
+    # Count and save # of upcoming shows only for artist entries to which the coressponding show exists.
+    id2upcoming_shows_dict = dict(
+        db.session.query(Artist.id, db.func.count(Show.id))
+        .join(Show, Show.artist_id == Venue.id)
+        .filter(Show.start_time > nowtime)
+        .group_by(Artist.id)
+        .all()
+    )
+    id2num_upcoming_shows.update(id2upcoming_shows_dict)
+    return id2num_upcoming_shows
+
+
 @app.route("/artists/search", methods=["POST"])
 def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    nowtime = datetime.datetime.utcnow()
-    id2num = defaultdict(int)
-    upcoming_shows = dict(
-        db.session.query(Artist.id, db.func.count(Show.id))
-        .join(Show, Show.artist_id == Artist.id)
-        .filter(Show.start_time > nowtime)
-        .group_by(Artist.id)
-        .all()
-    )
-    id2num.update(upcoming_shows)
+    id2num_upcoming_shows = count_id2num_upcoming_shows_for_artist
 
     search_term = request.form.get("search_term", "")
     data = (
@@ -269,7 +290,11 @@ def search_artists():
     response = {
         "count": len(data),
         "data": [
-            {"id": r.id, "name": r.name, "num_upcoming_shows": id2num[r.id]}
+            {
+                "id": r.id,
+                "name": r.name,
+                "num_upcoming_shows": id2num_upcoming_shows[r.id],
+            }
             for r in data
         ],
     }
@@ -282,6 +307,9 @@ def search_artists():
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
+    # Perform two distinct join query instead of doing like the following for performance issue:
+    #   session.query(Show, Artist, Venue).join(Artist, ...).join(Venue, ...)
+    # I'm afraid that this creates an initial large table whose size is (n_shows * n_artist * n_venue)-order.
     nowtime = datetime.datetime.utcnow()
     show_venue = (
         db.session.query(Show, Venue).join(Venue, Venue.id == Show.venue_id).all()
@@ -463,6 +491,9 @@ def shows():
     # displays list of shows at /shows
     # TODO: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
+    # Perform two distinct join query instead of doing like the following for performance issue:
+    #   session.query(Show, Artist, Venue).join(Artist, ...).join(Venue, ...)
+    # I'm afraid that this creates an initial large table whose size is (n_shows * n_artist * n_venue)-order.
     show_venue = (
         db.session.query(Show, Venue).join(Venue, Venue.id == Show.venue_id).all()
     )

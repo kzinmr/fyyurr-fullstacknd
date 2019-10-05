@@ -268,7 +268,7 @@ def count_id2num_upcoming_shows_for_artist():
     # Count and save # of upcoming shows only for artist entries to which the coressponding show exists.
     id2upcoming_shows_dict = dict(
         db.session.query(Artist.id, db.func.count(Show.id))
-        .join(Show, Show.artist_id == Venue.id)
+        .join(Show, Show.artist_id == Artist.id)
         .filter(Show.start_time > nowtime)
         .group_by(Artist.id)
         .all()
@@ -278,11 +278,11 @@ def count_id2num_upcoming_shows_for_artist():
 
 
 @app.route("/artists/search", methods=["POST"])
-def search_artists():  # FIXME
+def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    id2num_upcoming_shows = count_id2num_upcoming_shows_for_artist
+    id2num_upcoming_shows = count_id2num_upcoming_shows_for_artist()
 
     search_term = request.form.get("search_term", "")
     data = (
@@ -290,6 +290,7 @@ def search_artists():  # FIXME
         .filter(Artist.name.ilike(f"%{search_term}%"))
         .all()
     )
+    print(data)
     response = {
         "count": len(data),
         "data": [

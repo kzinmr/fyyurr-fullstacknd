@@ -30,9 +30,6 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, nullable=True)
     seeking_description = db.Column(db.String(120), nullable=True)
 
-    shows = db.relationship(
-        "Show", backref="venue", cascade="all, delete-orphan", lazy=True
-    )
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 
@@ -52,9 +49,6 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean, nullable=True)
     seeking_description = db.Column(db.String(120), nullable=True)
 
-    shows = db.relationship(
-        "Show", backref="artist", cascade="all, delete-orphan", lazy=True
-    )
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 
@@ -65,6 +59,13 @@ class Show(db.Model):
     start_time = db.Column(db.TIMESTAMP(), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey("Venue.id"), nullable=False)
     artist_id = db.Column(db.Integer, db.ForeignKey("Artist.id"), nullable=False)
+
+    artist = db.relationship(
+        "Artist", backref=db.backref("shows", cascade="all,delete"), lazy=True
+    )
+    venue = db.relationship(
+        "Venue", backref=db.backref("shows", cascade="all,delete"), lazy=True
+    )
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.

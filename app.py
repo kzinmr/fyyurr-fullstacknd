@@ -195,6 +195,9 @@ def create_venue_submission():
     try:
         # Use form.lists() not .as_dict() because 'genres' is multi-valued field.
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
+        formdata["seeking_talent"] = (
+            True if formdata["seeking_talent"] == "y" else False
+        )
         venue = Venue(**formdata)
         db.session.add(venue)
         db.session.commit()
@@ -275,7 +278,7 @@ def count_id2num_upcoming_shows_for_artist():
 
 
 @app.route("/artists/search", methods=["POST"])
-def search_artists():
+def search_artists():  # FIXME
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
@@ -375,7 +378,10 @@ def edit_artist_submission(artist_id):
     try:
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
         for k, v in formdata.items():
-            setattr(artist, k, v)
+            if k == "seeking_venue":
+                setattr(artist, k, True if v == "y" else False)
+            else:
+                setattr(artist, k, v)
         db.session.add(artist)
         db.session.commit()
     except Exception:
@@ -417,7 +423,10 @@ def edit_venue_submission(venue_id):
     try:
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
         for k, v in formdata.items():
-            setattr(venue, k, v)
+            if k == "seeking_talent":
+                setattr(venue, k, True if v == "y" else False)
+            else:
+                setattr(venue, k, v)
         db.session.add(venue)
         db.session.commit()
     except Exception:
@@ -457,6 +466,7 @@ def create_artist_submission():
     error = False
     try:
         formdata = {k: v[0] if k != "genres" else v for k, v in request.form.lists()}
+        formdata["seeking_venue"] = True if formdata["seeking_venue"] == "y" else False
         artist = Artist(**formdata)
         db.session.add(artist)
         db.session.commit()

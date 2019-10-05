@@ -1,3 +1,5 @@
+# This script populates DB with mock data.
+# This is supporsed to be executed only once on starting development.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
